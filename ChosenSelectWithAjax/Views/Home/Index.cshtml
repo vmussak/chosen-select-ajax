@@ -1,0 +1,60 @@
+﻿@model ChosenSelectWithAjax.Models.Cliente
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="jumbotron">
+    <h1>Chosen Select com Ajax</h1>
+    <div class="row">
+        @Html.DropDownList("Id", Model.ComboClientes, new { @class = "chosen-select", id = "idCliente" })
+    </div>
+</div>
+
+<script>
+
+    var urlClientes = '@Url.Action("GetClientes", "Home")'
+
+    $(document).ready(function () {
+        $(".chosen-select").chosen();
+        ajaxSelect('idCliente', urlClientes, 'nome', 'Id', 'Nome');
+        
+
+        function ajaxSelect(id, url, searchParam, valueField, textField, params) {
+
+            params = params || {};
+
+            $('div#' + id + '_chosen .chosen-search input').keyup(function () {
+                var palavra = $(this).val();
+                params[searchParam] = palavra;
+
+                var palavraRegex = new RegExp(palavra, 'gi');
+
+                $('div#' + id + '_chosen ul.chosen-results').empty();
+                $("#" + id).empty();
+
+                $.get(url, params).success(function (data) {
+
+                    for(let item of data) {
+                        $("#" + id).append("<option value='" + item[valueField] + "'> " + item[textField] + " </option>");
+                    }
+                    $("#" + id).trigger("chosen:updated");
+
+                    $('div#' + id + '_chosen').removeClass('chosen-container-single-nosearch');
+                    $('div#' + id + '_chosen .chosen-search input').val(palavra);
+                    $('div#' + id + '_chosen .chosen-search input').removeAttr('readonly');
+                    $('div#' + id + '_chosen .chosen-search input').focus();
+                    
+                    $('div#' + id + '_chosen .active-result').each(function () {
+                        var html = $(this).html();
+                        $(this).html(html.replace(palavraRegex, function (matched) {
+                            return '<em>' + matched + '</em>';
+                        }));
+                    });
+                }).error(function () {
+                    $("#" + id).empty().html("<option> Ocorreu um erro </option>");
+                    $("#" + id).trigger("chosen:updated");
+                });
+            });
+        }
+    })
+</script>
